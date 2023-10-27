@@ -1,4 +1,4 @@
-![symm](https://github.com/Green-Phys/green-symmetry/actions/workflows/h5pp-test.yaml/badge.svg)
+![symm](https://github.com/Green-Phys/green-symmetry/actions/workflows/test.yaml/badge.svg)
 
 # green-symmetry
 
