@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.18)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
-project(utils)
+project(symmetry)
 
 if (${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_BINARY_DIR})
     message(FATAL_ERROR "In-source builds are not allowed")
@@ -16,7 +16,6 @@ include(GreenDeps)
 add_green_dependency(green-h5pp)
 add_green_dependency(green-ndarrays)
 add_green_dependency(green-params)
-add_green_dependency(green-utils)
 
 add_subdirectory(src)
 add_library(GREEN::SYMMETRY ALIAS symmetry)
