@@ -134,10 +134,18 @@ namespace green::symmetry {
       }
     }
 
+    /**
+     * @return vector that maps k-point from the full first BZ to a k-point in the reduced first BZ
+     */
     const std::vector<size_t>& full_to_reduced() const { return _full_to_reduced; }
-
+    /**
+     * @return vector that maps k-point from the reduced first BZ to a k-point in the full first BZ
+     */
     const std::vector<size_t>& reduced_to_full() const { return _reduced_to_full; }
-
+    /**
+     * @return list of flags for each k-point in the full first BZ telling whether we need to du complex conjugations
+     * to get corresponding point in reduced BZ
+     */
     const std::vector<long>&   conj_list() const { return _conj_list; }
 
     size_t                     num_kpair_stored() const { return _num_kpair_stored; }
@@ -148,6 +156,9 @@ namespace green::symmetry {
 
     const std::vector<long>&   kpair_irre_list() const { return _kpair_irre_list; }
 
+    /**
+     * @return list of weight for each k-point in the full first BZ (w = 2 if k-point has exact mapping to reduced BZ, 0 otherwise)
+     */
     const std::vector<double>& weight() const { return _weight; }
 
     /**
@@ -165,6 +176,14 @@ namespace green::symmetry {
       return index;
     }
 
+    /**
+     * For a given value from reduced first BZ and k-point from the full first BZ,
+     * determine the corresponding value in the full first BZ
+     *
+     * @param val - value from reduced  first BZ
+     * @param k - k-point to compute actual value for
+     * @return corresponding value in the full first BZ
+     */
     std::complex<double> value(std::complex<double> val, size_t k) const { return _conj_list[k] == 0 ? val : std::conj(val); }
 
     template <typename T>
@@ -172,9 +191,23 @@ namespace green::symmetry {
       return _conj_list[k] ? conj_op<T> : no_op<T>;
     }
 
+    /**
+     * For a given index `k` of a point from the full first BZ return an index `ik` of a corresponding point
+     * from the reduced first BZ
+     *
+     * @param k - index of a point in the full BZ
+     * @return index of a corresponding point in the reduced BZ
+     */
     size_t reduced_point(size_t k) const { return _full_to_reduced[k]; }
 
-    size_t full_point(size_t k) const { return _reduced_to_full[k]; }
+    /**
+     * For a given index `ik` of a point from the reduced first BZ return an index `k` of a corresponding point
+     * from the reduced first BZ
+     *
+     * @param ik - index of a point in the reduced BZ
+     * @return index of a corresponding point in the full BZ
+     */
+    size_t full_point(size_t ik) const { return _reduced_to_full[ik]; }
 
   private:
     // Mapping of k-point from full BZ to reduced BZ
@@ -272,6 +305,15 @@ namespace green::symmetry {
       return std::make_pair(val(_symmetry.reduced_point(k)), _symmetry.template op<T>(k));
     }
 
+    /**
+     * Reconstruct array defined on the full first Brillouin zone from inpute array defined on reduced BZ.
+     * First dimension should correspond to momentum index
+     *
+     * @tparam T - value type of array
+     * @tparam D - dimension of array
+     * @param val - array to be projected
+     * @return new array on the full first BZ that corresponds to input array via defined symmetry relations
+     */
     template <typename T, size_t D>
     auto ibz_to_full(const green::ndarray::ndarray<T, D>& val) const {
       assert(val.shape()[0] == _ink);
@@ -286,6 +328,15 @@ namespace green::symmetry {
       return ret;
     }
 
+    /**
+     * Project input array defined on the full first Brillouin zone onto reduced one. First dimension should correspond to
+     * momentum index
+     *
+     * @tparam T - value type of array
+     * @tparam D - dimension of array
+     * @param val - array to be projected
+     * @return new array that corresponds to input array via defined symmetry relations
+     */
     template <typename T, size_t D>
     auto full_to_ibz(const green::ndarray::ndarray<T, D>& val) const {
       assert(val.shape()[0] == _nk);
