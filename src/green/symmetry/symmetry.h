@@ -103,8 +103,7 @@ namespace green::symmetry {
 
   class inv_symm_op {
   public:
-    inv_symm_op(green::params::params& p) {
-      define_parameters(p);
+    inv_symm_op(const green::params::params& p) {
       dtensor<2>           kmesh;
       std::vector<long>    irre_list;
       std::vector<long>    index;
@@ -197,7 +196,7 @@ namespace green::symmetry {
   template <typename Symmetry = inv_symm_op>
   class brillouin_zone_utils {
   public:
-    brillouin_zone_utils(green::params::params& p);
+    brillouin_zone_utils(const green::params::params& p);
     /**
      * @return number of k-points in the full first Brillouin zone
      */

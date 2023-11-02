@@ -52,8 +52,8 @@ TEST_CASE("Brillouin Zone Utils") {
     auto        p          = green::params::params("DESCR");
     std::string input_file = TEST_PATH + "/test.h5"s;
     std::string args       = "test --input_file " + input_file;
-    p.parse(args);
     green::symmetry::define_parameters(p);
+    p.parse(args);
     green::symmetry::brillouin_zone_utils bz(p);
   }
 
@@ -61,8 +61,8 @@ TEST_CASE("Brillouin Zone Utils") {
     auto        p          = green::params::params("DESCR");
     std::string input_file = TEST_PATH + "/test.h5"s;
     std::string args       = "test --input_file " + input_file;
-    p.parse(args);
     green::symmetry::define_parameters(p);
+    p.parse(args);
     green::symmetry::brillouin_zone_utils bz(p);
     green::symmetry::ztensor<4>           x_k(bz.nk(), 5, 5, 2);
     green::symmetry::ztensor<4>           x_r(bz.nk(), 5, 5, 2);
@@ -78,8 +78,8 @@ TEST_CASE("Brillouin Zone Utils") {
     auto        p          = green::params::params("DESCR");
     std::string input_file = TEST_PATH + "/test.h5"s;
     std::string args       = "test --input_file " + input_file;
-    p.parse(args);
     green::symmetry::define_parameters(p);
+    p.parse(args);
     green::symmetry::brillouin_zone_utils bz(p);
     green::symmetry::dtensor<1>           k1   = bz.mesh()(0);
     green::symmetry::dtensor<1>           k2   = bz.mesh()(5);
@@ -93,8 +93,8 @@ TEST_CASE("Brillouin Zone Utils") {
     auto        p          = green::params::params("DESCR");
     std::string input_file = TEST_PATH + "/test.h5"s;
     std::string args       = "test --input_file " + input_file;
-    p.parse(args);
     green::symmetry::define_parameters(p);
+    p.parse(args);
     green::symmetry::brillouin_zone_utils bz(p);
     green::symmetry::ztensor<4>           X(bz.ink(), 5, 5, 2);
     initialize_array(X);

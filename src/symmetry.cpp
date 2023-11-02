@@ -14,8 +14,7 @@ using namespace std::literals::complex_literals;
 namespace green::symmetry {
 
   template <typename Symmetry>
-  brillouin_zone_utils<Symmetry>::brillouin_zone_utils(green::params::params& p) : _symmetry(p) {
-    define_parameters(p);
+  brillouin_zone_utils<Symmetry>::brillouin_zone_utils(const green::params::params& p) : _symmetry(p) {
     dtensor<2>           kmesh;
     green::h5pp::archive in_file(p["input_file"], "r");
     in_file["grid/nk"] >> _nk;
