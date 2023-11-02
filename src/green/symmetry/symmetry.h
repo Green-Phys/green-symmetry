@@ -95,6 +95,12 @@ namespace green::symmetry {
     };
   }  // namespace details
 
+  /**
+   * Define names of parameters that are needed brillouin_zone_utils
+   * @param p - parameters object
+   */
+  inline void define_parameters(green::params::params& p) { p.define<std::string>("input_file", "Input file"); }
+
   class inv_symm_op {
   public:
     inv_symm_op(green::params::params& p) {
@@ -172,8 +178,6 @@ namespace green::symmetry {
     size_t full_point(size_t k) const { return _reduced_to_full[k]; }
 
   private:
-    void define_parameters(green::params::params& p) { p.define<std::string>("input_file", "Input file"); }
-
     // Mapping of k-point from full BZ to reduced BZ
     std::vector<size_t> _full_to_reduced;
     // Mapping of k-point from reduced BZ to full BZ
@@ -194,13 +198,6 @@ namespace green::symmetry {
   class brillouin_zone_utils {
   public:
     brillouin_zone_utils(green::params::params& p);
-
-    /**
-     * Define names of parameters that are needed brillouin_zone_utils
-     * @param p - parameters object
-     */
-    void define_parameters(green::params::params& p) { p.define<std::string>("input_file", "Input file"); }
-
     /**
      * @return number of k-points in the full first Brillouin zone
      */
