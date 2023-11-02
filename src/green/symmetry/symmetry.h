@@ -197,6 +197,11 @@ namespace green::symmetry {
   class brillouin_zone_utils {
   public:
     brillouin_zone_utils(const green::params::params& p);
+
+    /**
+     * @return object describing system symmetries
+     */
+    const Symmetry& symmetry() const {return _symmetry;}
     /**
      * @return number of k-points in the full first Brillouin zone
      */
