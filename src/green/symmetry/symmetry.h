@@ -105,7 +105,6 @@ namespace green::symmetry {
   public:
     inv_symm_op(const green::params::params& p) {
       dtensor<2>           kmesh;
-      std::vector<long>    irre_list;
       std::vector<long>    index;
       green::h5pp::archive in_file(p["input_file"], "r");
       in_file["grid/weight"] >> _weight;
@@ -132,6 +131,12 @@ namespace green::symmetry {
         }
         _full_to_reduced[i] = k_ir;
       }
+      _deg.resize(_reduced_to_full.size());
+      for (size_t ik = 0; ik < _reduced_to_full.size(); ++ik) {
+        for (size_t k = 0; k < index.size(); ++k) {
+          if (_reduced_to_full[ik] == index[k]) _deg[ik].push_back(k);
+        }
+      }
     }
 
     /**
@@ -146,18 +151,19 @@ namespace green::symmetry {
      * @return list of flags for each k-point in the full first BZ telling whether we need to du complex conjugations
      * to get corresponding point in reduced BZ
      */
-    const std::vector<long>&   conj_list() const { return _conj_list; }
+    const std::vector<long>& conj_list() const { return _conj_list; }
 
-    size_t                     num_kpair_stored() const { return _num_kpair_stored; }
+    size_t                   num_kpair_stored() const { return _num_kpair_stored; }
 
-    const std::vector<long>&   conj_kpair_list() const { return _conj_kpair_list; }
+    const std::vector<long>& conj_kpair_list() const { return _conj_kpair_list; }
 
-    const std::vector<long>&   trans_kpair_list() const { return _trans_kpair_list; }
+    const std::vector<long>& trans_kpair_list() const { return _trans_kpair_list; }
 
-    const std::vector<long>&   kpair_irre_list() const { return _kpair_irre_list; }
+    const std::vector<long>& kpair_irre_list() const { return _kpair_irre_list; }
 
     /**
-     * @return list of weight for each k-point in the full first BZ (w = 2 if k-point has exact mapping to reduced BZ, 0 otherwise)
+     * @return list of weight for each k-point in the full first BZ (w = 2 if k-point has exact mapping to reduced BZ, 0
+     * otherwise)
      */
     const std::vector<double>& weight() const { return _weight; }
 
@@ -207,7 +213,9 @@ namespace green::symmetry {
      * @param ik - index of a point in the reduced BZ
      * @return index of a corresponding point in the full BZ
      */
-    size_t full_point(size_t ik) const { return _reduced_to_full[ik]; }
+    size_t                   full_point(size_t ik) const { return _reduced_to_full[ik]; }
+
+    const std::vector<long>& deg(int ik) const { return _deg[ik]; }
 
   private:
     // Mapping of k-point from full BZ to reduced BZ
@@ -218,6 +226,8 @@ namespace green::symmetry {
     std::vector<double> _weight;
     // conjugate list
     std::vector<long> _conj_list;
+    // list of degenerate points for each irreducible point
+    std::vector<std::vector<long>> _deg;
 
     // k-pairs information
     std::vector<long> _conj_kpair_list;
@@ -234,7 +244,7 @@ namespace green::symmetry {
     /**
      * @return object describing system symmetries
      */
-    const Symmetry& symmetry() const {return _symmetry;}
+    const Symmetry& symmetry() const { return _symmetry; }
     /**
      * @return number of k-points in the full first Brillouin zone
      */
