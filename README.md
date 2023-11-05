@@ -6,3 +6,7 @@
 # green-symmetry
 
 Provides general routines to work with quantities in reciprocal space
+
+# Acknowledgements
+
+This work is supported by National Science Foundation under the award CSSI-2310582
