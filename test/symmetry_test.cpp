@@ -96,24 +96,30 @@ TEST_CASE("Brillouin Zone Utils") {
     green::symmetry::define_parameters(p);
     p.parse(args);
     green::symmetry::brillouin_zone_utils bz(p);
-    green::symmetry::ztensor<4>           X(bz.ink(), 5, 5, 2);
+    green::symmetry::ztensor<5>           X(1, bz.ink(), 5, 5, 2);
     initialize_array(X);
-    green::symmetry::ztensor<4> Z = bz.ibz_to_full(X);
+    const auto& cX = X;
+    green::symmetry::ztensor<4> Z = bz.ibz_to_full(X(0));
     green::symmetry::ztensor<4> W = bz.full_to_ibz(Z);
-    REQUIRE(std::equal(X(1).begin(), X(1).end(), Z(2).begin(), [&](const std::complex<double>& a, const std::complex<double>& b) {
+    auto cZ = bz.ibz_to_full(cX(0));
+    auto cW = bz.full_to_ibz(cZ);
+    REQUIRE(std::equal(X(0,1).begin(), X(0,1).end(), Z(2).begin(), [&](const std::complex<double>& a, const std::complex<double>& b) {
       return std::abs(a - std::conj(b)) < 1e-12;
     }));
-    REQUIRE(std::equal(X.begin(), X.end(), W.begin(),
+    REQUIRE(std::equal(X(0,1).begin(), X(0,1).end(), cZ(2).begin(), [&](const std::complex<double>& a, const std::complex<double>& b) {
+      return std::abs(a - std::conj(b)) < 1e-12;
+    }));
+    REQUIRE(std::equal(X(0).begin(), X(0).end(), W.begin(),
                        [&](const std::complex<double>& a, const std::complex<double>& b) { return std::abs(a - b) < 1e-12; }));
     {
-      auto [Y, op] = bz.value(X, 0);
+      auto [Y, op] = bz.value(X(0), 0);
       auto op1     = op;
-      REQUIRE(std::equal(X(0).begin(), X(0).end(), Y.begin(), [&](const std::complex<double>& a, const std::complex<double>& b) {
+      REQUIRE(std::equal(X(0,0).begin(), X(0,0).end(), Y.begin(), [&](const std::complex<double>& a, const std::complex<double>& b) {
         return std::abs(a - op1(b)) < 1e-12;
       }));
     }
     {
-      auto [Y, op] = bz.value(X, 2);
+      auto [Y, op] = bz.value(X(0), 2);
       auto op1     = op;
       REQUIRE(std::equal(Z(2).begin(), Z(2).end(), Y.begin(), [&](const std::complex<double>& a, const std::complex<double>& b) {
         return std::abs(a - op1(b)) < 1e-12;

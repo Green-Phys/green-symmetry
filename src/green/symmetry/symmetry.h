@@ -329,7 +329,7 @@ namespace green::symmetry {
       assert(val.shape()[0] == _ink);
       std::array<size_t, D> new_shape(val.shape());
       new_shape[0] = _nk;
-      green::ndarray::ndarray<T, D> ret(new_shape);
+      green::ndarray::ndarray<std::remove_const_t<T>, D> ret(new_shape);
       for (size_t k = 0; k < _nk; ++k) {
         size_t ik = _symmetry.reduced_point(k);
         std::transform(val(ik).begin(), val(ik).end(), ret(k).begin(),
@@ -352,7 +352,7 @@ namespace green::symmetry {
       assert(val.shape()[0] == _nk);
       std::array<size_t, D> new_shape(val.shape());
       new_shape[0] = _ink;
-      green::ndarray::ndarray<T, D> ret(new_shape);
+      green::ndarray::ndarray<std::remove_const_t<T>, D> ret(new_shape);
       for (size_t ik = 0; ik < _ink; ++ik) {
         size_t k = _symmetry.full_point(ik);
         ret(ik) << val(k);
