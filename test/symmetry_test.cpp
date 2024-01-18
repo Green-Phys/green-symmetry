@@ -115,8 +115,8 @@ TEST_CASE("Brillouin Zone Utils") {
       auto [Y, op] = bz.value(X(0), 0);
       auto op1     = op;
       REQUIRE(
-          std::equal(X(0, 0).begin(), X(0, 0).end(), Y.begin(), [&](const std::complex<double>& a, const std::complex<double>& b) { return std::abs(a - op1(b)) < 1e-12;
-      }));
+          std::equal(X(0, 0).begin(), X(0, 0).end(), Y.begin(),
+                     [&](const std::complex<double>& a, const std::complex<double>& b) { return std::abs(a - op1(b)) < 1e-12; }));
     }
     {
       auto [Y, op] = bz.value(X(0), 2);
