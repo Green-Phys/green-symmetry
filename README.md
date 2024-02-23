@@ -2,6 +2,7 @@
 [![GitHub license](https://img.shields.io/badge/C%2B%2B-17-blue)](https://en.cppreference.com/w/cpp/compiler_support/17)
 
 ![symm](https://github.com/Green-Phys/green-symmetry/actions/workflows/test.yaml/badge.svg)
+[![codecov](https://codecov.io/gh/Green-Phys/green-symmetry/graph/badge.svg?token=EYNU6VLIN9)](https://codecov.io/gh/Green-Phys/green-symmetry)
 
 # green-symmetry
 
