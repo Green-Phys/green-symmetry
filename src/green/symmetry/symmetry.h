@@ -336,7 +336,7 @@ namespace green::symmetry {
                        [this, k](const T& item) { return _symmetry.template op<T>(k)(item); });
       }
       return ret;
-    }
+    } // LCOV_EXCL_LINE
 
     /**
      * Project input array defined on the full first Brillouin zone onto reduced one. First dimension should correspond to
@@ -358,7 +358,7 @@ namespace green::symmetry {
         ret(ik) << val(k);
       }
       return ret;
-    }
+    } // LCOV_EXCL_LINE
 
   private:
     Symmetry   _symmetry;

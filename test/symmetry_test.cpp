@@ -89,6 +89,32 @@ TEST_CASE("Brillouin Zone Utils") {
     REQUIRE(std::all_of(diff.begin(), diff.end(), [](double a) { return std::abs(a) < 1e-12; }));
   }
 
+  SECTION("K-point Operations") {
+    auto        p          = green::params::params("DESCR");
+    std::string input_file = TEST_PATH + "/test.h5"s;
+    std::string args       = "test --input_file " + input_file;
+    green::symmetry::define_parameters(p);
+    p.parse(args);
+    green::symmetry::brillouin_zone_utils bz(p);
+    green::symmetry::dtensor<1>           k1  = bz.mesh()(4);
+    int                                   pos = green::symmetry::details::find_pos(k1, bz.mesh());
+    auto                                  k2  = k1 + 0.1111;
+    auto                                  k3  = k1 + 2.0;
+    k3                                        = green::symmetry::details::wrap(k3);
+    REQUIRE(pos == 4);
+    REQUIRE_THROWS(green::symmetry::details::find_pos(k2, bz.mesh()));
+    REQUIRE(std::equal(k1.begin(), k1.end(), k3.begin(), [](double a, double b) { return std::abs(a - b) < 1e-12; }));
+    std::complex<double> x(1,3);
+    for(int k_i = 0; k_i < bz.mesh().shape()[0]; ++k_i) {
+      int k_i_2 = bz.symmetry().full_point(bz.symmetry().reduced_point(k_i));
+      auto val = bz.value(x, k_i);
+      auto k = bz.mesh()(k_i);
+      REQUIRE(std::abs(val.real() - x.real())< 1e-12);
+      REQUIRE(std::abs(val.imag() -(k_i == k_i_2 ? x.imag() : -x.imag()))< 1e-12);
+    }
+    REQUIRE(std::abs(bz.nkpw() - double(1./bz.nk()))<1e-12);
+  }
+
   SECTION("Symmetry") {
     auto        p          = green::params::params("DESCR");
     std::string input_file = TEST_PATH + "/test.h5"s;
@@ -100,7 +126,7 @@ TEST_CASE("Brillouin Zone Utils") {
     initialize_array(X);
     const auto&                 cX = X;
     green::symmetry::ztensor<4> Z  = bz.ibz_to_full(X(0));
-    green::symmetry::ztensor<4> W = bz.full_to_ibz(Z);
+    green::symmetry::ztensor<4> W  = bz.full_to_ibz(Z);
     auto                        cZ = bz.ibz_to_full(cX(0));
     auto                        cW = bz.full_to_ibz(cZ);
     REQUIRE(std::equal(
