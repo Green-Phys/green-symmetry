@@ -29,6 +29,33 @@ inline void initialize_array(green::ndarray::ndarray<std::complex<T>, Dim>& arra
   });
 }
 
+/**
+ * @brief compare two 3d arrays of dimension (nso, nso) related by time-reversal operator
+ * 
+ * @tparam T - precision
+ * @param array : 
+ * @param array_trs 
+ * @return true if array and array_trs form a time-reversal pair
+ * @return false otherwise
+ */
+template <typename T>
+bool compare_trs_matrices(const green::ndarray::ndarray<T,2>& array,
+                          const green::ndarray::ndarray<T,2>& array_trs) {
+  size_t nso = array.shape()[0];
+  size_t nao = nso / 2;
+  green::ndarray::ndarray<T,2> diff(nso, nso);
+  for (size_t i = 0; i < nao; ++i) {
+    for (size_t j = 0; j < nao; ++j) {
+        diff(i, j) = std::conj(array(nao + i, nao + j));
+        diff(nao + i, nao + j) = std::conj(array(i, j));
+        diff(i, nao + j) = -1.0 * std::conj(array(nao + i, j));
+        diff(nao + i, j) = -1.0 * std::conj(array(i, nao + j));
+    }
+  }
+  diff = diff - array_trs;
+  return std::all_of(diff.begin(), diff.end(), [](T a) { return std::abs(a) < 1e-12; });
+}
+
 template <typename T, size_t D>
 std::ostream& operator<<(std::ostream& os, const green::ndarray::ndarray<T, D>& array) {
   std::cout << "{";
@@ -122,11 +149,11 @@ TEST_CASE("Brillouin Zone Utils") {
     green::symmetry::define_parameters(p);
     p.parse(args);
     green::symmetry::brillouin_zone_utils bz(p);
-    green::symmetry::ztensor<5>           X(1, bz.ink(), 5, 5, 2);
+    green::symmetry::ztensor<4>           X(1, bz.ink(), 5, 5);
     initialize_array(X);
     const auto&                 cX = X;
-    green::symmetry::ztensor<4> Z  = bz.ibz_to_full(X(0));
-    green::symmetry::ztensor<4> W  = bz.full_to_ibz(Z);
+    green::symmetry::ztensor<3> Z  = bz.ibz_to_full(X(0));
+    green::symmetry::ztensor<3> W  = bz.full_to_ibz(Z);
     auto                        cZ = bz.ibz_to_full(cX(0));
     auto                        cW = bz.full_to_ibz(cZ);
     REQUIRE(std::equal(
@@ -136,6 +163,8 @@ TEST_CASE("Brillouin Zone Utils") {
         X(0, 1).begin(), X(0, 1).end(), cZ(2).begin(),
         [&](const std::complex<double>& a, const std::complex<double>& b) { return std::abs(a - std::conj(b)) < 1e-12; }));
     REQUIRE(std::equal(X(0).begin(), X(0).end(), W.begin(),
+                       [&](const std::complex<double>& a, const std::complex<double>& b) { return std::abs(a - b) < 1e-12; }));
+    REQUIRE(std::equal(X(0).begin(), X(0).end(), cW.begin(),
                        [&](const std::complex<double>& a, const std::complex<double>& b) { return std::abs(a - b) < 1e-12; }));
     {
       auto [Y, op] = bz.value(X(0), 0);
@@ -151,5 +180,34 @@ TEST_CASE("Brillouin Zone Utils") {
         return std::abs(a - op1(b)) < 1e-12;
       }));
     }
+  }
+
+  /**
+   * @brief tests the symmetry operations for time-reversal operation in X2C calculations where spin-orbit coupling is present
+   */
+  SECTION("Symmetry-X2C") {
+    auto        p          = green::params::params("DESCR");
+    std::string input_file = TEST_PATH + "/test_x2c.h5"s;
+    std::string args       = "test --input_file " + input_file;
+    green::symmetry::define_parameters(p);
+    p.parse(args);
+    green::symmetry::brillouin_zone_utils bz(p);
+    size_t nao = bz.nao();
+    size_t nso = bz.nso();
+    REQUIRE(std::abs((double) nao - 10.0) <= 1e-12);
+    REQUIRE(std::abs((double) nso - 20.0) <= 1e-12);
+    green::symmetry::ztensor<4>           X(1, bz.ink(), nso, nso);
+    initialize_array(X);
+    const auto&                 cX = X;
+    green::symmetry::ztensor<3> Z  = bz.ibz_to_full(X(0));
+    green::symmetry::ztensor<3> W  = bz.full_to_ibz(Z);
+    auto                        cZ = bz.ibz_to_full(cX(0));
+    auto                        cW = bz.full_to_ibz(cZ);
+    REQUIRE(compare_trs_matrices(X(0, 1), Z(2)));
+    REQUIRE(compare_trs_matrices(X(0, 1), cZ(2)));
+    REQUIRE(std::equal(X(0).begin(), X(0).end(), W.begin(),
+                       [&](const std::complex<double>& a, const std::complex<double>& b) { return std::abs(a - b) < 1e-12; }));
+    REQUIRE(std::equal(X(0).begin(), X(0).end(), cW.begin(),
+                       [&](const std::complex<double>& a, const std::complex<double>& b) { return std::abs(a - b) < 1e-12; }));
   }
 }

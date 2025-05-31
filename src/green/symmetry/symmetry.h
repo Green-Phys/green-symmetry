@@ -256,6 +256,16 @@ namespace green::symmetry {
     size_t ink() const { return _ink; }
 
     /**
+     * @return number of AOs based on input file
+     */
+    size_t nao() const { return _nao; }
+
+    /**
+     * @return number of spin-orbitals based on input file
+     */
+    size_t nso() const { return _nso; }
+
+    /**
      * @return weight of each k-point (1/_nk)
      */
     double nkpw() const { return _nkpw; }
@@ -320,20 +330,39 @@ namespace green::symmetry {
      * First dimension should correspond to momentum index
      *
      * @tparam T - value type of array
-     * @tparam D - dimension of array
      * @param val - array to be projected
      * @return new array on the full first BZ that corresponds to input array via defined symmetry relations
      */
-    template <typename T, size_t D>
-    auto ibz_to_full(const green::ndarray::ndarray<T, D>& val) const {
+    template <typename T>
+    auto ibz_to_full(const green::ndarray::ndarray<T, 3>& val) const {
       assert(val.shape()[0] == _ink);
-      std::array<size_t, D> new_shape(val.shape());
+      std::array<size_t, 3> new_shape(val.shape());
       new_shape[0] = _nk;
-      green::ndarray::ndarray<std::remove_const_t<T>, D> ret(new_shape);
-      for (size_t k = 0; k < _nk; ++k) {
-        size_t ik = _symmetry.reduced_point(k);
-        std::transform(val(ik).begin(), val(ik).end(), ret(k).begin(),
-                       [this, k](const T& item) { return _symmetry.template op<T>(k)(item); });
+      green::ndarray::ndarray<std::remove_const_t<T>, 3> ret(new_shape);
+
+      if (!_X2C){
+        for (size_t k = 0; k < _nk; ++k) {
+          size_t ik = _symmetry.reduced_point(k);
+          std::transform(val(ik).begin(), val(ik).end(), ret(k).begin(),
+                         [this, k](const T& item) { return _symmetry.template op<T>(k)(item); });
+        }
+      } else {
+        // for X2C, spin-flip is necessary: X(-k) = Spin-flip [X(k).conj()]
+        for (size_t k = 0; k < _nk; ++k) {
+          size_t ik = _symmetry.reduced_point(k);
+          if (_symmetry.conj_list()[k]) {
+            for (size_t i = 0; i < _nao; ++i) {
+              for (size_t j = 0; j < _nao; ++j) {
+                  ret(k, i, j) = std::conj(val(ik, _nao + i, _nao + j));
+                  ret(k, _nao + i, _nao + j) = std::conj(val(ik, i, j));
+                  ret(k, i, _nao + j) = -1.0 * std::conj(val(ik, _nao + i, j));
+                  ret(k, _nao + i, j) = -1.0 * std::conj(val(ik, i, _nao + j));
+              }
+            }
+          } else {
+              ret(k) << val(ik);
+          }
+        }
       }
       return ret;
     } // LCOV_EXCL_LINE
@@ -364,6 +393,9 @@ namespace green::symmetry {
     Symmetry   _symmetry;
     size_t     _nk;
     size_t     _ink;
+    size_t     _nao;
+    size_t     _nso;
+    bool       _X2C;
 
     double     _nkpw;
 
