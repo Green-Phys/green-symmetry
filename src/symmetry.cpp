@@ -20,7 +20,12 @@ namespace green::symmetry {
     in_file["grid/nk"] >> _nk;
     in_file["grid/ink"] >> _ink;
     in_file["grid/k_mesh_scaled"] >> kmesh;
+    in_file["params/nao"] >> _nao;
+    in_file["params/nso"] >> _nso;
     in_file.close();
+
+    _X2C = false;
+    if (_nao != _nso) {_X2C = true;}
 
     _T_k_to_r.resize(_nk, _nk);
     _T_r_to_k.resize(_nk, _nk);
