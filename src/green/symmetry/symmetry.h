@@ -104,6 +104,7 @@ namespace green::symmetry {
   class inv_symm_op {
   public:
     inv_symm_op(const green::params::params& p) {
+      size_t               nao;
       dtensor<2>           kmesh;
       std::vector<long>    index;
       green::h5pp::archive in_file(p["input_file"], "r");
@@ -115,6 +116,17 @@ namespace green::symmetry {
       in_file["grid/conj_pairs_list"] >> _conj_kpair_list;
       in_file["grid/trans_pairs_list"] >> _trans_kpair_list;
       in_file["grid/kpair_irre_list"] >> _kpair_irre_list;
+      in_file["params/nao"] >> nao;
+      try {
+        in_file["grid/n_ops"] >> n_symm_ops_;
+        kspace_orep_.resize(index.size(), n_symm_ops_, nao, nao);
+        kspace_op_index_.resize(index.size());
+        in_file["grid/kspace_orep"] >> kspace_orep_;
+        in_file["grid/stars_ops"] >> kspace_op_index_;
+        symm_group_ = true;
+      } catch (...) {
+        symm_group_ = false;
+      }
       in_file.close();
       _full_to_reduced.resize(index.size());
       long k_ir;
@@ -217,6 +229,26 @@ namespace green::symmetry {
 
     const std::vector<long>& deg(int ik) const { return _deg[ik]; }
 
+    /**
+     * @return whether symmetry group approach is used
+     */
+    const bool& symm_group() const { return symm_group_; }
+
+    /**
+     * @return number of symmetry operations
+     */
+    const size_t& n_symm_ops() const { return n_symm_ops_; }
+
+    /**
+     * @return rotation matrices
+     */
+    const ztensor<4>& kspace_orep() const { return kspace_orep_; }
+
+    /**
+     * @return symmetry operation indices
+     */
+    const itensor<1>& kspace_op_index() const { return kspace_op_index_; }
+
   private:
     // Mapping of k-point from full BZ to reduced BZ
     std::vector<size_t> _full_to_reduced;
@@ -228,6 +260,14 @@ namespace green::symmetry {
     std::vector<long> _conj_list;
     // list of degenerate points for each irreducible point
     std::vector<std::vector<long>> _deg;
+    // Number of symmetry operations
+    size_t n_symm_ops_ = 0;
+    // Rotation matrices
+    ztensor<4> kspace_orep_;
+    // Symmetry operation indices
+    itensor<1> kspace_op_index_;
+    // Symmetry group approach
+    bool symm_group_ = false;
 
     // k-pairs information
     std::vector<long> _conj_kpair_list;
