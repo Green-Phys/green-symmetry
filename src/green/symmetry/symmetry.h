@@ -257,6 +257,7 @@ namespace green::symmetry {
       size_t op_idx = kspace_op_index_(k);
       size_t k_ir   = reduced_point(k);
       size_t k_pos_in_full = _reduced_to_full[k_ir];
+      size_t nao = kspace_orep_.shape()[2];
       MMatrixXcd U_k_dummy(kspace_orep_.data() + k_pos_in_full * n_symm_ops_ * nao * nao + op_idx * nao * nao, nao, nao);
       U_k = U_k_dummy.cast<prec>();
     }
