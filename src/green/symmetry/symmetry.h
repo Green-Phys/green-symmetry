@@ -249,6 +249,18 @@ namespace green::symmetry {
      */
     const itensor<1>& kspace_op_index() const { return kspace_op_index_; }
 
+    template <typename prec>
+    const void get_rotation_matrix(MatrixX<prec>& U_k, size_t k) const {
+      if (!symm_group_) {
+        throw std::runtime_error("Symmetry group approach is not used, rotation matrices are not available");
+      }
+      size_t op_idx = kspace_op_index_(k);
+      size_t k_ir   = reduced_point(k);
+      size_t k_pos_in_full = _reduced_to_full[k_ir];
+      MMatrixXcd U_k_dummy(kspace_orep_.data() + k_pos_in_full * n_symm_ops_ * nao * nao + op_idx * nao * nao, nao, nao);
+      U_k = U_k_dummy.cast<prec>();
+    }
+
   private:
     // Mapping of k-point from full BZ to reduced BZ
     std::vector<size_t> _full_to_reduced;
