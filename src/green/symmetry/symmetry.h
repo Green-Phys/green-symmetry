@@ -118,12 +118,23 @@ namespace green::symmetry {
       in_file["grid/kpair_irre_list"] >> _kpair_irre_list;
       in_file["params/nao"] >> nao;
       try {
+        // set symm_group_ to true; if any of the following fail, we set it to false in catch block
+        symm_group_ = true;
+        // number of symmetry operations / transformations
         in_file["grid/n_ops"] >> n_symm_ops_;
         kspace_orep_.resize(index.size(), n_symm_ops_, nao, nao);
         kspace_op_index_.resize(index.size());
         in_file["grid/kspace_orep"] >> kspace_orep_;
+        // map of symmetry operation index for each k-point
         in_file["grid/stars_ops"] >> kspace_op_index_;
-        symm_group_ = true;
+        // Information about stars of k-points
+        in_file["grid/n_stars"] >> n_stars_;
+        stars_.resize(n_stars_);
+        for (size_t i = 0; i < n_stars_; ++i) {
+          itensor<1> star_i;
+          in_file["grid/stars/" + std::to_string(i)] >> star_i;
+          stars_[i] = star_i;
+        }
       } catch (...) {
         symm_group_ = false;
       }
@@ -249,6 +260,13 @@ namespace green::symmetry {
      */
     const itensor<1>& kspace_op_index() const { return kspace_op_index_; }
 
+    /**
+     * @brief Get the rotation matrix object
+     * 
+     * @tparam prec 
+     * @param U_k transformation matrix to be filled
+     * @param k k-point index in the full BZ
+     */
     template <typename prec>
     const void get_rotation_matrix(MatrixX<prec>& U_k, size_t k) const {
       if (!symm_group_) {
@@ -258,8 +276,34 @@ namespace green::symmetry {
       size_t k_ir   = reduced_point(k);
       size_t k_pos_in_full = _reduced_to_full[k_ir];
       size_t nao = kspace_orep_.shape()[2];
-      MMatrixXcd U_k_dummy(kspace_orep_.data() + k_pos_in_full * n_symm_ops_ * nao * nao + op_idx * nao * nao, nao, nao);
+      CMMatrixXcd U_k_dummy(kspace_orep_.data() + k_pos_in_full * n_symm_ops_ * nao * nao + op_idx * nao * nao, nao, nao);
+      U_k_dummy.resize(nao, nao);
       U_k = U_k_dummy.cast<prec>();
+    }
+
+    /**
+     * @brief Get the star of k-point indices for given irreducible k-point
+     * 
+     * @param star_idx 
+     * @return const itensor<1>& 
+     */
+    const itensor<1>& get_star(size_t star_idx) const {
+      if (!symm_group_) {
+        throw std::runtime_error("Symmetry group approach is not used, stars are not available");
+      }
+      return stars_[star_idx];
+    }
+
+    /**
+     * @brief Get the n_stars object
+     * 
+     * @return const size_t& 
+     */
+    const size_t& n_stars() const {
+      if (!symm_group_) {
+        throw std::runtime_error("Symmetry group approach is not used, stars are not available");
+      }
+      return n_stars_;
     }
 
   private:
@@ -281,6 +325,9 @@ namespace green::symmetry {
     itensor<1> kspace_op_index_;
     // Symmetry group approach
     bool symm_group_ = false;
+    // Stars information
+    std::vector<itensor<1>> stars_;
+    size_t n_stars_;
 
     // k-pairs information
     std::vector<long> _conj_kpair_list;
