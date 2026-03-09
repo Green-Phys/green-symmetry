@@ -15,11 +15,10 @@ namespace green::symmetry {
 
   template <typename Symmetry>
   brillouin_zone_utils<Symmetry>::brillouin_zone_utils(const green::params::params& p) : _symmetry(p) {
-    dtensor<2>           kmesh;
+    const dtensor<2>&    kmesh = _symmetry.mesh();
+    _nk = _symmetry.nk();
+    _ink = _symmetry.ink();
     green::h5pp::archive in_file(p["input_file"], "r");
-    in_file["grid/nk"] >> _nk;
-    in_file["grid/ink"] >> _ink;
-    in_file["grid/k_mesh_scaled"] >> kmesh;
     in_file["params/nao"] >> _nao;
     in_file["params/nso"] >> _nso;
     in_file.close();
@@ -112,12 +111,12 @@ namespace green::symmetry {
     f_k = (_T_r_to_k * f_r).eval();
   }
 
-  template class brillouin_zone_utils<inv_symm_op>;
+  template class brillouin_zone_utils<kpoint_symmetry>;
 
 #ifndef FT_BZ_OP
 #define FT_BZ_OP(N)                                                                           \
-  template void brillouin_zone_utils<inv_symm_op>::k_to_r(const ztensor<N>& in, ztensor<N>& out) const; \
-  template void brillouin_zone_utils<inv_symm_op>::r_to_k(const ztensor<N>& in, ztensor<N>& out) const;
+  template void brillouin_zone_utils<kpoint_symmetry>::k_to_r(const ztensor<N>& in, ztensor<N>& out) const; \
+  template void brillouin_zone_utils<kpoint_symmetry>::r_to_k(const ztensor<N>& in, ztensor<N>& out) const;
 #endif
 
   FT_BZ_OP(4)
