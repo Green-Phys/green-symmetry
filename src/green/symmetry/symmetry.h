@@ -163,12 +163,6 @@ namespace green::symmetry {
   };
 
 
-  /**
-   * @deprecated Use kpoint_symmetry instead. Kept for backward compatibility.
-   */
-  using inv_symm_op = kpoint_symmetry;
-
-
   class kpoint_symmetry : public mesh_symmetry {
   public:
     kpoint_symmetry(const green::params::params& p) {
@@ -289,6 +283,12 @@ namespace green::symmetry {
     std::vector<long> _kpair_irre_list;
     size_t            _num_kpair_stored;
   };
+
+
+  /**
+   * @deprecated Use kpoint_symmetry instead. Kept for backward compatibility.
+   */
+  using inv_symm_op = kpoint_symmetry;
 
 
   /**
