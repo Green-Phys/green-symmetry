@@ -7,7 +7,7 @@
 
 namespace green::symmetry {
 
-  static const std::string SYMMETRY_INPUT_MIN_VERSION = "1.0.0";
+  static const std::string SYMMETRY_INPUT_MIN_VERSION = "0.2.4";
 
   class symmetry_incorrect_input_error : public std::runtime_error {
   public:
