@@ -42,11 +42,11 @@ namespace green::symmetry {
       }
       
       // Information about stars of k-points
-      in_file["symmetry/k/n_stars"] >> _n_stars;
+      in_file["symmetry/q/n_stars"] >> _n_stars;
       _stars.resize(_n_stars);
       for (size_t i = 0; i < _n_stars; ++i) {
         itensor<1> star_i;
-        in_file["symmetry/k/stars/" + std::to_string(i)] >> star_i;
+        in_file["symmetry/q/stars/" + std::to_string(i)] >> star_i;
         // Convert itensor<1> to std::vector<long>
         _stars[i] = std::vector<long>(star_i.data(), star_i.data() + star_i.size());
       }
@@ -99,14 +99,21 @@ namespace green::symmetry {
      * @param q
      * @return
      */
-    template <typename T, size_t D>
-    auto value_J2C(const green::ndarray::ndarray<T, D>& val, size_t q) const {
+    template <typename T>
+    MatrixX<std::remove_const_t<T>> value_J2C(const green::ndarray::ndarray<T, 3>& val, size_t q) const {
+      using ST = std::remove_const_t<T>;
       assert(val.shape()[0] == _ink);
-      // Read transformation matrix
+      assert(val.shape()[1] == _naux);
+      assert(val.shape()[2] == _naux);
       size_t iq = reduced_point(q);
-      CMMatrixX<T> U_q(_q_sym_transform_j2c.data() + q * _naux * _naux, _naux, _naux);
-      // transform and return
-      auto val_tran = U_q * val(reduced_point(q)) * U_q.adjoint();
+      auto   val_iq = val(iq);
+
+      CMMatrixX<ST> U_q(_q_sym_transform_j2c.data() + q * _naux * _naux, _naux, _naux);
+      CMMatrixX<ST> val_iq_m(val_iq.data(), _naux, _naux);
+      MatrixX<ST>   U_q_cast = U_q.template cast<ST>();
+      MatrixX<ST>   val_iq_cast = val_iq_m.template cast<ST>();
+      MatrixX<ST>   val_tran = U_q_cast * val_iq_cast * U_q_cast.adjoint();
+
       if (_tr_conj_list[q] != 0) {
         val_tran = val_tran.conjugate();
       }
@@ -121,14 +128,21 @@ namespace green::symmetry {
      * @param q
      * @return
      */
-    template <typename T, size_t D>
-    auto value_P0(const green::ndarray::ndarray<T, D>& val, size_t q) const {
+    template <typename T>
+    MatrixX<std::remove_const_t<T>> value_P0(const green::ndarray::ndarray<T, 3>& val, size_t q) const {
+      using ST = std::remove_const_t<T>;
       assert(val.shape()[0] == _ink);
-      // Read transformation matrix
+      assert(val.shape()[1] == _naux);
+      assert(val.shape()[2] == _naux);
       size_t iq = reduced_point(q);
-      CMMatrixX<T> U_q(_q_sym_transform_p0.data() + q * _naux * _naux, _naux, _naux);
-      // transform and return
-      auto val_tran = U_q * val(reduced_point(q)) * U_q.adjoint();
+      auto   val_iq = val(iq);
+
+      CMMatrixX<ST> U_q(_q_sym_transform_p0.data() + q * _naux * _naux, _naux, _naux);
+      CMMatrixX<ST> val_iq_m(val_iq.data(), _naux, _naux);
+      MatrixX<ST>   U_q_cast = U_q.template cast<ST>();
+      MatrixX<ST>   val_iq_cast = val_iq_m.template cast<ST>();
+      MatrixX<ST>   val_tran = U_q_cast * val_iq_cast * U_q_cast.adjoint();
+
       if (_tr_conj_list[q] != 0) {
         val_tran = val_tran.conjugate();
       }
