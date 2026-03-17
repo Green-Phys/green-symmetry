@@ -41,8 +41,8 @@ namespace green::symmetry {
       }
     }
 
-    /** Full BZ k-index for k1 in pair (k1, k2) with q = k1 - k2 */
-    size_t k1_from_k2q(size_t k1, size_t q) const { return _k1_from_k2q(k1, q); }
+    /** Full BZ k1-index in pair (k1, k2) with q = k1 - k2, i.e. k1 = k2 + q */
+    size_t k1_from_k2q(size_t k2, size_t q) const { return _k1_from_k2q(k2, q); }
 
     /** Reduced BZ q-index for pair (k1, k2) */
     size_t q_from_k1k2(size_t k1, size_t k2) const { return _q_from_k1k2(k1, k2); }
