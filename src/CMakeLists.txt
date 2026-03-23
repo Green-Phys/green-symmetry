@@ -5,6 +5,8 @@
 project(symmetry-lib)
 
 add_library(symmetry
+        bose_kmesh.cpp
+        fermi_kmesh.cpp
         symmetry.cpp
 )
 

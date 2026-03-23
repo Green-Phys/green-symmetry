@@ -11,6 +11,10 @@
 #include <iostream>
 
 namespace green::symmetry {
+  // Tolerances for k-point floating-point comparisons
+  const double K_POINT_EQ_TOL   = 1e-12; // for k-point equality (find_pos)
+  const double K_POINT_WRAP_TOL = 1e-12; // for wrapping into BZ (wrap)
+  const double K_POINT_ZERO_TOL = 1e-12; // for zeroing small values (wrap)
   template <size_t D>
   using itensor = green::ndarray::ndarray<int, D>;
   template <size_t D>
@@ -58,7 +62,7 @@ namespace green::symmetry {
       for (size_t i = 0; i < kmesh.shape()[0]; ++i) {
         bool found = true;
         for (size_t j = 0; j < k.shape()[0]; ++j) {
-          found &= std::abs(k(j) - kmesh(i, j)) < 1e-12;
+          found &= std::abs(k(j) - kmesh(i, j)) < K_POINT_EQ_TOL;
         }
         if (found) {
           return i;
@@ -77,12 +81,15 @@ namespace green::symmetry {
     inline dtensor<1> wrap(const dtensor<1>& k) {
       dtensor<1> kk = k.copy();
       for (size_t j = 0; j < kk.shape()[0]; ++j) {
-        while ((kk(j) - 9.9999999999e-1) > 0.0) {
+        // Wrap values slightly above 1.0 back into [0,1)
+        while ((kk(j) - (1.0 - K_POINT_WRAP_TOL)) > 0.0) {
           kk(j) -= 1.0;
         }
-        if (std::abs(kk(j)) < 1e-9) {
+        // Snap very small values to zero
+        if (std::abs(kk(j)) < K_POINT_ZERO_TOL) {
           kk(j) = 0.0;
         }
+        // Wrap negative values into [0,1)
         while (kk(j) < 0) {
           kk(j) += 1.0;
         }

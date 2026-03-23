@@ -3,6 +3,7 @@
 
 #include "except.h"
 #include "symmetry_base.h"
+#include "shape_utils.h"
 
 namespace green::symmetry {
 
@@ -14,48 +15,7 @@ namespace green::symmetry {
    */
   class fermi_kmesh : public symmetry_base {
   public:
-    fermi_kmesh(const green::params::params& p) {
-      std::vector<long>    index;
-      green::h5pp::archive in_file(p["input_file"], "r");
-      in_file["symmetry/k/nk"] >> _nk;
-      in_file["symmetry/k/ink"] >> _ink;
-      in_file["symmetry/k/mesh_scaled"] >> _mesh;
-      in_file["symmetry/k/weight_ibz"] >> _weight;
-      in_file["symmetry/k/bz2ibz"] >> index;
-      in_file["symmetry/k/ibz2bz"] >> _reduced_to_full;
-      in_file["symmetry/k/tr_conj"] >> _tr_conj_list;
-      in_file["symmetry/pairs/num_kpair_stored"] >> _num_kpair_stored;
-      in_file["symmetry/pairs/conj_pairs_list"] >> _conj_kpair_list;
-      in_file["symmetry/pairs/trans_pairs_list"] >> _trans_kpair_list;
-      in_file["symmetry/pairs/kpair_irre_list"] >> _kpair_irre_list;
-      in_file["params/nao"] >> _nao;
-      in_file["params/nso"] >> _nso;
-
-      // Check input version to determine if symmetry data should be present
-      if (in_file.has_attribute("__green_version__")) {
-        std::string version = in_file.get_attribute<std::string>("__green_version__");
-        if (!CheckVersion(version)) {
-          in_file.close();
-          throw symmetry_outdated_input("Input file version " + version + " is too old. Minimum required version is " + SYMMETRY_INPUT_MIN_VERSION);
-        }
-      }
-      
-      // Read trnansformation matrices
-      _k_sym_transform_ao.resize(index.size(), _nso, _nso);
-      in_file["symmetry/k/k_sym_transform_ao"] >> _k_sym_transform_ao;
-      // Information about stars of k-points
-      in_file["symmetry/k/n_stars"] >> _n_stars;
-      _stars.resize(_n_stars);
-      for (size_t i = 0; i < _n_stars; ++i) {
-        itensor<1> star_i;
-        in_file["symmetry/k/stars/" + std::to_string(i)] >> star_i;
-        // Convert itensor<1> to std::vector<long>
-        _stars[i] = std::vector<long>(star_i.data(), star_i.data() + star_i.size());
-      }
-      
-      in_file.close();
-      build_mappings(index);
-    }
+    fermi_kmesh(const green::params::params& p);
 
     /**
      * @return list of flags for each k-point in the full first BZ telling whether we need to du complex conjugations
@@ -136,9 +96,11 @@ namespace green::symmetry {
     template <typename T>
     MatrixX<std::remove_const_t<T>> value_AO(const green::ndarray::ndarray<T, 3>& val, size_t k) const {
       using ST = std::remove_const_t<T>;
-      assert(val.shape()[0] == _ink);
-      assert(val.shape()[1] == _nso);
-      assert(val.shape()[2] == _nso);
+      green::symmetry::validate_shape(
+        {val.shape()[0], val.shape()[1], val.shape()[2]},
+        {_ink, _nso, _nso},
+        "value_AO"
+      );
       size_t ik = reduced_point(k);
       auto   val_ik = val(ik);
 
@@ -156,6 +118,7 @@ namespace green::symmetry {
     }
 
   private:
+    // ...existing code...
     // k-space symmetry transform in AO basis
     ztensor<3> _k_sym_transform_ao;
 

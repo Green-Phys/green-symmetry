@@ -3,8 +3,8 @@
  *
  */
 
-#ifndef GREEN_BZ_UTILS_H
-#define GREEN_BZ_UTILS_H
+#ifndef GREEN_SYMMETRY_H
+#define GREEN_SYMMETRY_H
 
 #include "common_defs.h"
 #include "except.h"
@@ -20,26 +20,7 @@ namespace green::symmetry {
    */
   class kq_map {
   public:
-    kq_map(const symmetry_base& kpt_sym, const symmetry_base& qpt_sym) {
-      size_t nk = kpt_sym.nk();
-      size_t nq = qpt_sym.nk();
-      dtensor<2> kmesh = kpt_sym.mesh();
-      dtensor<2> qmesh = qpt_sym.mesh();
-      _q_from_k1k2.resize(nk, nk);
-      _k1_from_k2q.resize(nk, nq);
-      _k2_from_k1q.resize(nk, nq);
-      for (int i = 0; i < nk; ++i) {
-        dtensor<1> ki = kmesh(i);
-        for (int j = 0; j < nk; ++j) {
-          dtensor<1> kj = kmesh(j);
-          auto       kq = details::wrap(ki - kj);
-          int        q  = details::find_pos(kq, qmesh);
-          _k2_from_k1q(i, q) = j;
-          _k1_from_k2q(j, q) = i;
-          _q_from_k1k2(i, j) = q;
-        }
-      }
-    }
+    kq_map(const symmetry_base& kpt_sym, const symmetry_base& qpt_sym);
 
     /** Full BZ k1-index in pair (k1, k2) with q = k1 - k2, i.e. k1 = k2 + q */
     size_t k1_from_k2q(size_t k2, size_t q) const { return _k1_from_k2q(k2, q); }
@@ -257,4 +238,4 @@ namespace green::symmetry {
   };
 }  // namespace green::symmetry
 
-#endif  // GREEN_BZ_UTILS_H
+#endif  // GREEN_SYMMETRY_H

@@ -1,5 +1,5 @@
-#ifndef GREEN_MESH_SYMMETRY_H
-#define GREEN_MESH_SYMMETRY_H
+#ifndef GREEN_SYMMETRY_BASE_H
+#define GREEN_SYMMETRY_BASE_H
 
 #include <stdexcept>
 #include "common_defs.h"
@@ -160,4 +160,4 @@ namespace green::symmetry {
 
 } // namespace green::symmetry
 
-#endif // GREEN_MESH_SYMMETRY_H
+#endif // GREEN_SYMMETRY_BASE_H
