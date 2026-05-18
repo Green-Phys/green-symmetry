@@ -52,6 +52,10 @@ namespace green::symmetry {
     _nqpw   = 1.0 / double(nq);
 
     auto [nkx, nky, nkz] = _k_symmetry.nk_list();
+    if (nkx * nky * nkz != (int)nk)
+      throw symmetry_incorrect_input_error(
+          "nk_list [" + std::to_string(nkx) + "," + std::to_string(nky) + "," + std::to_string(nkz) +
+          "] is inconsistent with nk=" + std::to_string(nk));
     dtensor<2> rmesh_scaled(nk, 3);
     for (int r = 0; r < nk; ++r) {
       int rx             = r / (nky * nkz);
