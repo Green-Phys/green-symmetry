@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "green/symmetry/fermi_kmesh.h"
 
 namespace green::symmetry {
