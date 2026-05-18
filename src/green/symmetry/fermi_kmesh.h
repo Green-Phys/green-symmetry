@@ -35,20 +35,13 @@ namespace green::symmetry {
 
     size_t nso() const { return _nso; }
 
+    const std::array<int, 3>& nk_list() const { return _nk_list; }
+
     /**
      * @return list of weight for each k-point in the full first BZ (w = 2 if k-point has exact mapping to reduced BZ, 0
      * otherwise)
      */
     const std::vector<double>& weight() const { return _weight; }
-
-    /**
-     * Find position in irre_list
-     */
-    size_t irre_pos(size_t k) const {
-      auto   itr   = std::find(_reduced_to_full.begin(), _reduced_to_full.end(), k);
-      size_t index = std::distance(_reduced_to_full.begin(), itr);
-      return index;
-    }
 
     size_t irre_pos_kpair(size_t idx) const {
       auto   itr   = std::find(_kpair_irre_list.begin(), _kpair_irre_list.end(), idx);
@@ -126,6 +119,8 @@ namespace green::symmetry {
     size_t _nao;
     // number of spin orbitals -- practical dimension of G / Sigma / etc.
     size_t _nso;
+    // k-mesh grid dimensions [nkx, nky, nkz]
+    std::array<int, 3> _nk_list;
 
     // k-pairs information
     std::vector<long> _conj_kpair_list;
