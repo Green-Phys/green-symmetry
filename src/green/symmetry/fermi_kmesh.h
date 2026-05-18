@@ -1,6 +1,8 @@
 #ifndef GREEN_KPOINT_SYMMETRY_H
 #define GREEN_KPOINT_SYMMETRY_H
 
+#include <array>
+
 #include "except.h"
 #include "symmetry_base.h"
 #include "shape_utils.h"
