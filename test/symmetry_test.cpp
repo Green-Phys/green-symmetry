@@ -368,6 +368,80 @@ TEST_CASE("Brillouin Zone Utils") {
     }
   }
 
+  // nk_list tests: verify that nk_list is read correctly and that k_to_r/r_to_k
+  // round-trips for meshes that cannot be handled by the cbrt/sqrt fallback alone.
+
+  SECTION("nk_list fallback 3x3x3") {
+    // test.h5 has no symmetry/k/nk_list: the cbrt fallback must still work.
+    auto        p          = green::params::params("DESCR");
+    std::string input_file = TEST_PATH + "/test.h5"s;
+    std::string args       = "test --input_file " + input_file;
+    green::symmetry::define_parameters(p);
+    p.parse(args);
+    green::symmetry::brillouin_zone_utils bz(p);
+    REQUIRE(bz.nk() == 27);
+    auto nk_list = bz.k_symmetry().nk_list();
+    REQUIRE(nk_list[0] == 3);
+    REQUIRE(nk_list[1] == 3);
+    REQUIRE(nk_list[2] == 3);
+    green::symmetry::ztensor<4> x_k(bz.nk(), 3, 3, 2);
+    green::symmetry::ztensor<4> x_r(bz.nk(), 3, 3, 2);
+    green::symmetry::ztensor<4> x_k_new(bz.nk(), 3, 3, 2);
+    initialize_array(x_k);
+    bz.k_to_r(x_k, x_r);
+    bz.r_to_k(x_r, x_k_new);
+    REQUIRE(std::equal(x_k.begin(), x_k.end(), x_k_new.begin(),
+                       [](const std::complex<double>& a, const std::complex<double>& b) { return std::abs(a - b) < 1e-12; }));
+  }
+
+  SECTION("nk_list explicit 3x3x1") {
+    // test_3x3x1.h5 has nk_list=[3,3,1]: a 2D uniform mesh where the cbrt
+    // fallback would also succeed (9 = 3^2), verifying nk_list takes priority.
+    auto        p          = green::params::params("DESCR");
+    std::string input_file = TEST_PATH + "/test_3x3x1.h5"s;
+    std::string args       = "test --input_file " + input_file;
+    green::symmetry::define_parameters(p);
+    p.parse(args);
+    green::symmetry::brillouin_zone_utils bz(p);
+    REQUIRE(bz.nk() == 9);
+    auto nk_list = bz.k_symmetry().nk_list();
+    REQUIRE(nk_list[0] == 3);
+    REQUIRE(nk_list[1] == 3);
+    REQUIRE(nk_list[2] == 1);
+    green::symmetry::ztensor<4> x_k(bz.nk(), 3, 3, 2);
+    green::symmetry::ztensor<4> x_r(bz.nk(), 3, 3, 2);
+    green::symmetry::ztensor<4> x_k_new(bz.nk(), 3, 3, 2);
+    initialize_array(x_k);
+    bz.k_to_r(x_k, x_r);
+    bz.r_to_k(x_r, x_k_new);
+    REQUIRE(std::equal(x_k.begin(), x_k.end(), x_k_new.begin(),
+                       [](const std::complex<double>& a, const std::complex<double>& b) { return std::abs(a - b) < 1e-12; }));
+  }
+
+  SECTION("nk_list explicit 2x3x1") {
+    // test_2x3x1.h5 has nk_list=[2,3,1]: a non-square 2D mesh (nk=6) that the
+    // cbrt/sqrt fallback cannot handle — this specifically validates the fix.
+    auto        p          = green::params::params("DESCR");
+    std::string input_file = TEST_PATH + "/test_2x3x1.h5"s;
+    std::string args       = "test --input_file " + input_file;
+    green::symmetry::define_parameters(p);
+    p.parse(args);
+    green::symmetry::brillouin_zone_utils bz(p);
+    REQUIRE(bz.nk() == 6);
+    auto nk_list = bz.k_symmetry().nk_list();
+    REQUIRE(nk_list[0] == 2);
+    REQUIRE(nk_list[1] == 3);
+    REQUIRE(nk_list[2] == 1);
+    green::symmetry::ztensor<4> x_k(bz.nk(), 3, 3, 2);
+    green::symmetry::ztensor<4> x_r(bz.nk(), 3, 3, 2);
+    green::symmetry::ztensor<4> x_k_new(bz.nk(), 3, 3, 2);
+    initialize_array(x_k);
+    bz.k_to_r(x_k, x_r);
+    bz.r_to_k(x_r, x_k_new);
+    REQUIRE(std::equal(x_k.begin(), x_k.end(), x_k_new.begin(),
+                       [](const std::complex<double>& a, const std::complex<double>& b) { return std::abs(a - b) < 1e-12; }));
+  }
+
   /**
    * @brief tests the symmetry operations for time-reversal operation in X2C calculations where spin-orbit coupling is present
    */

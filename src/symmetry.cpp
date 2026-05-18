@@ -36,7 +36,7 @@ namespace green::symmetry {
 
   brillouin_zone_utils::brillouin_zone_utils(const green::params::params& p) : _k_symmetry(p), _q_symmetry(p),
     _kq_map(_k_symmetry, _q_symmetry) {
-    const dtensor<2>&    kmesh = _k_symmetry.mesh();
+    const dtensor<2>&    k_mesh = _k_symmetry.mesh();
     size_t nk = _k_symmetry.nk();
     size_t ink = _k_symmetry.ink();
     size_t nq = _q_symmetry.nk();
@@ -51,19 +51,21 @@ namespace green::symmetry {
     _nkpw   = 1.0 / double(nk);
     _nqpw   = 1.0 / double(nq);
 
-    int nkx = std::cbrt(double(nk));
-    assert(nkx * nkx * nkx == nk);
+    auto [nkx, nky, nkz] = _k_symmetry.nk_list();
+    if (nkx * nky * nkz != (int)nk)
+      throw symmetry_incorrect_input_error(
+          "nk_list [" + std::to_string(nkx) + "," + std::to_string(nky) + "," + std::to_string(nkz) +
+          "] is inconsistent with nk=" + std::to_string(nk));
     dtensor<2> rmesh_scaled(nk, 3);
-    // TODO: This is hard-coded for (nk, nk, nk) type of k-mesh; it would not work for 2D systems.
     for (int r = 0; r < nk; ++r) {
-      int rx             = r / (nkx * nkx);
-      int ry             = (r / nkx) % nkx;
-      int rz             = r % nkx;
+      int rx             = r / (nky * nkz);
+      int ry             = (r / nkz) % nky;
+      int rz             = r % nkz;
       rmesh_scaled(r, 0) = double(rx);
       rmesh_scaled(r, 1) = double(ry);
       rmesh_scaled(r, 2) = double(rz);
       for (int k = 0; k < nk; ++k) {
-        auto kr         = rmesh_scaled(r, 0) * kmesh(k, 0) + rmesh_scaled(r, 1) * kmesh(k, 1) + rmesh_scaled(r, 2) * kmesh(k, 2);
+        auto kr         = rmesh_scaled(r, 0) * k_mesh(k, 0) + rmesh_scaled(r, 1) * k_mesh(k, 1) + rmesh_scaled(r, 2) * k_mesh(k, 2);
         _T_k_to_r(r, k) = std::exp(-2i * M_PI * kr) * _nkpw;
         _T_r_to_k(k, r) = std::exp(2i * M_PI * kr);
       }

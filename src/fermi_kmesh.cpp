@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "green/symmetry/fermi_kmesh.h"
 
 namespace green::symmetry {
@@ -17,6 +19,24 @@ namespace green::symmetry {
     in_file["symmetry/pairs/kpair_irre_list"] >> _kpair_irre_list;
     in_file["params/nao"] >> _nao;
     in_file["params/nso"] >> _nso;
+    if (in_file.is_data("symmetry/k/nk_list")) {
+      itensor<1> nkl(3);
+      in_file["symmetry/k/nk_list"] >> nkl;
+      _nk_list = {(int)nkl(0), (int)nkl(1), (int)nkl(2)};
+    } else {
+      int nk_cbrt = std::lround(std::cbrt(double(_nk)));
+      if (nk_cbrt * nk_cbrt * nk_cbrt == (int)_nk) {
+        _nk_list = {nk_cbrt, nk_cbrt, nk_cbrt};
+      } else {
+        int nk_sqrt = std::lround(std::sqrt(double(_nk)));
+        if (nk_sqrt * nk_sqrt == (int)_nk) {
+          _nk_list = {nk_sqrt, nk_sqrt, 1};
+        } else {
+          throw symmetry_incorrect_input_error("k-mesh must be nk^3 (3D) or nk^2 x 1 (2D); "
+                                               "or regenerate input with params/nk_list.");
+        }
+      }
+    }
 
     // Check input version to determine if symmetry data should be present
     if (in_file.has_attribute("__green_version__")) {
