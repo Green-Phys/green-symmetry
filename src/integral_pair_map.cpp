@@ -448,6 +448,13 @@ namespace green::symmetry {
     }
   };
 
+  void validate_auxiliary_isometry(const std::complex<double>* map, std::size_t naux) {
+    if (!map || !naux) invalid("invalid whitened auxiliary map");
+    Eigen::Map<const matrix> transform(map, naux, naux);
+    if (!transform.allFinite()) invalid("nonfinite whitened auxiliary map");
+    close_matrix(transform.adjoint() * transform, matrix::Identity(naux, naux), "whitened auxiliary isometry");
+  }
+
   bool integral_pair_map::is_space_group(const std::string& directory) {
     handle file(H5Fopen((directory + "/meta.h5").c_str(), H5F_ACC_RDONLY, H5P_DEFAULT), H5Fclose);
     if (H5Aexists(file, "integral_format") <= 0) return false;
@@ -551,7 +558,9 @@ namespace green::symmetry {
       }
       matrix mapped = a * cs;
       close_matrix(mapped * mapped.adjoint(), ct * ct.adjoint(), "captured auxiliary metric");
-      return matrix(ct.triangularView<Eigen::Lower>().solve(mapped));
+      matrix transform = ct.triangularView<Eigen::Lower>().solve(mapped);
+      validate_auxiliary_isometry(transform.data(), naux());
+      return transform;
     });
     auto ao        = [&](std::size_t k) {
       return d.cached(d.gauge_id + ":AO:" + std::to_string(op) + ":" + std::to_string(k),

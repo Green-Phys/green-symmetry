@@ -9,6 +9,10 @@
 #include <string>
 
 namespace green::symmetry {
+  // The whitened auxiliary map must preserve the ERI Gram matrix. Raw metric
+  // covariance alone can miss a large error in an ill-conditioned direction.
+  void validate_auxiliary_isometry(const std::complex<double>* map, std::size_t naux);
+
   struct integral_reader_statistics {
     std::size_t factor_read_bytes = 0, metric_read_bytes = 0, chunk_reads = 0, reconstructions = 0, cache_hits = 0,
                 cache_misses = 0, cache_evictions = 0;
